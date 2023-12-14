@@ -89,6 +89,31 @@ func TestUpdateUser(t *testing.T) {
 	r.LessOrEqual(createdUser.UpdatedAt, updatedUser.UpdatedAt)
 }
 
+func TestDeleteUser(t *testing.T) {
+	r, _, ctx, app := initTest(t)
+
+	createdUser, err := app.CreateUser(ctx, &user.User{
+		Username: "testUser",
+		Email:    "testUser@mail.example",
+	})
+	r.NoError(err)
+	r.NotNil(createdUser)
+
+	createdUser2, err := app.CreateUser(ctx, &user.User{
+		Username: "testUser2",
+		Email:    "testUser2@mail.example",
+	})
+	r.NoError(err)
+	r.NotNil(createdUser)
+
+	r.NoError(app.DeleteUserById(ctx, createdUser.Id))
+
+	allUsers, err := app.FindAllUsersByFilter(ctx, nil)
+	r.NoError(err)
+
+	require.Equal(t, []user.User{*createdUser2}, allUsers)
+}
+
 func initTest(t *testing.T) (*require.Assertions, zerolog.Logger, context.Context, *App) {
 	r := require.New(t)
 	l := zerolog.New(zerolog.NewTestWriter(t))

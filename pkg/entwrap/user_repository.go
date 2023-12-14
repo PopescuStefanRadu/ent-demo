@@ -13,7 +13,7 @@ type UserRepository struct {
 
 func (ur *UserRepository) GetById(ctx context.Context, id int) (*businessUser.User, error) {
 	u, err := ur.Client.Get(ctx, id)
-	return toBusinessModel(u), err
+	return toPtrBusinessModel(u), err
 }
 
 func (ur *UserRepository) Create(ctx context.Context, u *businessUser.User) (*businessUser.User, error) {
@@ -27,10 +27,17 @@ func (ur *UserRepository) Create(ctx context.Context, u *businessUser.User) (*bu
 
 	createdUser, err := ur.Client.Query().Where(user.Email(u.Email)).First(ctx)
 
-	return toBusinessModel(createdUser), err
+	return toPtrBusinessModel(createdUser), err
 }
 
-func (ur *UserRepository) FindAllByFilter(context.Context, *businessUser.FindAllFilter) ([]businessUser.User, error) {
+func (ur *UserRepository) FindAllByFilter(ctx context.Context, filter *businessUser.FindAllFilter) ([]businessUser.User, error) {
+	if filter == nil {
+		users, err := ur.Client.Query().Where().All(ctx)
+		if err != nil {
+			return nil, err
+		}
+		return toBusinessModelSlice(users), nil
+	}
 	return nil, nil
 }
 
@@ -46,20 +53,39 @@ func (ur *UserRepository) Update(ctx context.Context, u *businessUser.User) (*bu
 	return ur.GetById(ctx, u.Id)
 
 }
-func (ur *UserRepository) DeleteById(context.Context, int) error {
-	return nil
+func (ur *UserRepository) DeleteById(ctx context.Context, id int) error {
+	return ur.Client.DeleteOneID(id).Exec(ctx)
 }
 
 func (ur *UserRepository) DeleteAll(ctx context.Context) (int, error) {
 	return ur.Client.Delete().Exec(ctx)
 }
 
-func toBusinessModel(u *ent.User) *businessUser.User {
+func toBusinessModelSlice(users []*ent.User) []businessUser.User {
+	if len(users) == 0 {
+		return nil
+	}
+
+	res := make([]businessUser.User, len(users))
+
+	for i, u := range users {
+		res[i] = toBusinessModel(u)
+	}
+
+	return res
+}
+
+func toPtrBusinessModel(u *ent.User) *businessUser.User {
 	if u == nil {
 		return nil
 	}
 
-	return &businessUser.User{
+	model := toBusinessModel(u)
+	return &model
+}
+
+func toBusinessModel(u *ent.User) businessUser.User {
+	return businessUser.User{
 		Id:        u.ID,
 		Username:  u.Username,
 		Email:     u.Email,
