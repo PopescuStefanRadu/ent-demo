@@ -8,7 +8,8 @@ import (
 )
 
 type UserRepository struct {
-	Client *ent.UserClient
+	Client    *ent.UserClient
+	EntClient *ent.Client
 }
 
 func (ur *UserRepository) GetById(ctx context.Context, id int) (*businessUser.User, error) {
@@ -40,6 +41,10 @@ func (ur *UserRepository) Update(context.Context, *businessUser.User) (*business
 }
 func (ur *UserRepository) DeleteById(context.Context, int) error {
 	return nil
+}
+
+func (ur *UserRepository) DeleteAll(ctx context.Context) (int, error) {
+	return ur.Client.Delete().Exec(ctx)
 }
 
 func toBusinessModel(u *ent.User) *businessUser.User {

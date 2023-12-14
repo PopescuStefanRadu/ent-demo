@@ -27,6 +27,7 @@ type Repository interface {
 	Create(context.Context, *User) (*User, error)
 	Update(context.Context, *User) (*User, error)
 	DeleteById(context.Context, int) error
+	DeleteAll(ctx context.Context) (int, error)
 }
 
 func (s *Service) GetUserById(ctx context.Context, id int) (*User, error) {

@@ -48,9 +48,12 @@ func TestCreateUser(t *testing.T) {
 		Migrator: entwrap.Migrator{Ent: EntClient},
 		Service:  userService,
 	}
-
 	r.NoError(app.Init(ctx))
-
+	t.Cleanup(func() {
+		if err := app.Cleanup(ctx); err != nil {
+			l.Err(err).Msg("Could not clean up application state")
+		}
+	})
 	createdUser, err := app.CreateUser(ctx, &user.User{
 		Username: "testUser",
 		Email:    "testUser@mail.example",
