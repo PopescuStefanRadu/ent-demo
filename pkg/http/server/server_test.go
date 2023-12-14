@@ -3,7 +3,7 @@ package server_test
 import (
 	"context"
 	"fmt"
-	"github.com/PopescuStefanRadu/ent-demo/cmd/http/server"
+	"github.com/PopescuStefanRadu/ent-demo/pkg/http/server"
 	"github.com/cenkalti/backoff/v4"
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/require"

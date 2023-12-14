@@ -2,7 +2,7 @@ package main
 
 import (
 	"context"
-	"github.com/PopescuStefanRadu/ent-demo/cmd/http/server"
+	"github.com/PopescuStefanRadu/ent-demo/pkg/http/server"
 	"github.com/rs/zerolog"
 	"os"
 	"os/signal"
