@@ -8,8 +8,7 @@ import (
 )
 
 type UserRepository struct {
-	Client    *ent.UserClient
-	EntClient *ent.Client
+	Client *ent.UserClient
 }
 
 func (ur *UserRepository) GetById(ctx context.Context, id int) (*businessUser.User, error) {
@@ -35,8 +34,16 @@ func (ur *UserRepository) FindAllByFilter(context.Context, *businessUser.FindAll
 	return nil, nil
 }
 
-func (ur *UserRepository) Update(context.Context, *businessUser.User) (*businessUser.User, error) {
-	return nil, nil
+func (ur *UserRepository) Update(ctx context.Context, u *businessUser.User) (*businessUser.User, error) {
+	err := ur.Client.Update().
+		Where(user.ID(u.Id)).
+		SetUsername(u.Username).
+		SetEmail(u.Email).
+		Exec(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return ur.GetById(ctx, u.Id)
 
 }
 func (ur *UserRepository) DeleteById(context.Context, int) error {
