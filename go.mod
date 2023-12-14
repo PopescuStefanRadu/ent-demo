@@ -6,6 +6,7 @@ require (
 	entgo.io/ent v0.12.5
 	github.com/cenkalti/backoff/v4 v4.2.1
 	github.com/gin-gonic/gin v1.9.1
+	github.com/mattn/go-sqlite3 v1.14.16
 	github.com/rs/zerolog v1.31.0
 	github.com/stretchr/testify v1.8.4
 )

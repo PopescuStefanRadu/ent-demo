@@ -1,6 +1,9 @@
 package user
 
-import "time"
+import (
+	"context"
+	"time"
+)
 
 type User struct {
 	Id        int
@@ -19,29 +22,29 @@ type FindAllFilter struct {
 }
 
 type Repository interface {
-	GetById(int) (User, error)
-	FindAllByFilter(FindAllFilter) ([]User, error)
-	Create(User) (User, error)
-	Update(User) (User, error)
-	DeleteById(int) error
+	GetById(context.Context, int) (*User, error)
+	FindAllByFilter(context.Context, *FindAllFilter) ([]User, error)
+	Create(context.Context, *User) (*User, error)
+	Update(context.Context, *User) (*User, error)
+	DeleteById(context.Context, int) error
 }
 
-func (s *Service) GetUserById(id int) (User, error) {
-	return s.UserRepository.GetById(id)
+func (s *Service) GetUserById(ctx context.Context, id int) (*User, error) {
+	return s.UserRepository.GetById(ctx, id)
 }
 
-func (s *Service) FindAllUsersByFilter(filter FindAllFilter) ([]User, error) {
-	return s.UserRepository.FindAllByFilter(filter)
+func (s *Service) FindAllUsersByFilter(ctx context.Context, filter *FindAllFilter) ([]User, error) {
+	return s.UserRepository.FindAllByFilter(ctx, filter)
 }
 
-func (s *Service) CreateUser(u User) (User, error) {
-	return s.UserRepository.Create(u)
+func (s *Service) CreateUser(ctx context.Context, u *User) (*User, error) {
+	return s.UserRepository.Create(ctx, u)
 }
 
-func (s *Service) UpdateUser(u User) (User, error) {
-	return s.UserRepository.Update(u)
+func (s *Service) UpdateUser(ctx context.Context, u *User) (*User, error) {
+	return s.UserRepository.Update(ctx, u)
 }
 
-func (s *Service) DeleteUserById(id int) error {
-	return s.UserRepository.DeleteById(id)
+func (s *Service) DeleteUserById(ctx context.Context, id int) error {
+	return s.UserRepository.DeleteById(ctx, id)
 }
