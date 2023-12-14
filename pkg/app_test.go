@@ -35,25 +35,8 @@ func TestMain(m *testing.M) {
 }
 
 func TestCreateUser(t *testing.T) {
-	r := require.New(t)
+	r, _, ctx, app := initTest(t)
 
-	l := zerolog.New(zerolog.NewTestWriter(t))
-	ctx := l.WithContext(context.Background())
-
-	userRepository := &entwrap.UserRepository{Client: EntClient.User}
-	userService := &user.Service{UserRepository: userRepository}
-
-	app := &App{
-		Logger:   l,
-		Migrator: entwrap.Migrator{Ent: EntClient},
-		Service:  userService,
-	}
-	r.NoError(app.Init(ctx))
-	t.Cleanup(func() {
-		if err := app.Cleanup(ctx); err != nil {
-			l.Err(err).Msg("Could not clean up application state")
-		}
-	})
 	createdUser, err := app.CreateUser(ctx, &user.User{
 		Username: "testUser",
 		Email:    "testUser@mail.example",
@@ -65,4 +48,48 @@ func TestCreateUser(t *testing.T) {
 	r.NotEqual(time.Time{}, createdUser.CreatedAt)
 	r.Equal("testUser", createdUser.Username)
 	r.Equal("testUser@mail.example", createdUser.Email)
+}
+
+func TestGetUserById(t *testing.T) {
+	r, _, ctx, app := initTest(t)
+
+	createdUser, err := app.CreateUser(ctx, &user.User{
+		Username: "testUser",
+		Email:    "testUser@mail.example",
+	})
+	r.NoError(err)
+
+	userById, err := app.GetUserById(ctx, createdUser.Id)
+	r.NoError(err)
+
+	r.Equal(createdUser, userById)
+}
+
+func initTest(t *testing.T) (*require.Assertions, zerolog.Logger, context.Context, *App) {
+	r := require.New(t)
+	l := zerolog.New(zerolog.NewTestWriter(t))
+	ctx := l.WithContext(context.Background())
+	app := initApp(ctx, t, l)
+
+	return r, l, ctx, app
+}
+
+func initApp(ctx context.Context, t *testing.T, l zerolog.Logger) *App {
+	userRepository := &entwrap.UserRepository{Client: EntClient.User}
+	userService := &user.Service{UserRepository: userRepository}
+
+	app := &App{
+		Logger:   l,
+		Migrator: entwrap.Migrator{Ent: EntClient},
+		Service:  userService,
+	}
+	require.NoError(t, app.Init(ctx))
+
+	t.Cleanup(func() {
+		if err := app.Cleanup(ctx); err != nil {
+			l.Err(err).Msg("Could not clean up application state")
+		}
+	})
+
+	return app
 }
