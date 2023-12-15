@@ -17,28 +17,31 @@ func (ur *UserRepository) GetById(ctx context.Context, id int) (*businessUser.Us
 }
 
 func (ur *UserRepository) Create(ctx context.Context, u *businessUser.User) (*businessUser.User, error) {
-	err := ur.Client.Create().
+	createdUser, err := ur.Client.Create().
 		SetUsername(u.Username).
 		SetEmail(u.Email).
-		Exec(ctx)
+		Save(ctx)
 	if err != nil {
 		return nil, err
 	}
-
-	createdUser, err := ur.Client.Query().Where(user.Email(u.Email)).First(ctx)
 
 	return toPtrBusinessModel(createdUser), err
 }
 
 func (ur *UserRepository) FindAllByFilter(ctx context.Context, filter *businessUser.FindAllFilter) ([]businessUser.User, error) {
-	if filter == nil {
+	if filter == nil || len(filter.IdsIn) == 0 {
 		users, err := ur.Client.Query().Where().All(ctx)
 		if err != nil {
 			return nil, err
 		}
 		return toBusinessModelSlice(users), nil
 	}
-	return nil, nil
+
+	filteredUsers, err := ur.Client.Query().Where(user.IDIn(filter.IdsIn...)).All(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return toBusinessModelSlice(filteredUsers), nil
 }
 
 func (ur *UserRepository) Update(ctx context.Context, u *businessUser.User) (*businessUser.User, error) {

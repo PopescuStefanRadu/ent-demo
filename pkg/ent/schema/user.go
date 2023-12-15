@@ -11,14 +11,18 @@ type User struct {
 	ent.Schema
 }
 
+func Now() time.Time {
+	return time.Now().In(time.UTC)
+}
+
 // Fields of the User.
 func (User) Fields() []ent.Field {
 	return []ent.Field{
 		field.Int("id"),
 		field.String("username"),
 		field.String("email").Unique(),
-		field.Time("created_at").Default(time.Now),
-		field.Time("updated_at").Default(time.Now).UpdateDefault(time.Now),
+		field.Time("created_at").Default(Now),
+		field.Time("updated_at").Default(Now).UpdateDefault(Now),
 	}
 }
 

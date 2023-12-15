@@ -16,18 +16,15 @@ import (
 )
 
 var (
-	SqlDB     *sql.DB
-	EntClient *ent.Client
+	SqlDB *sql.DB
 )
 
 func TestMain(m *testing.M) {
-	SqlDB, err := sql.Open("sqlite3", "file:ent?mode=memory&cache=shared&_fk=1")
+	var err error
+	SqlDB, err = sql.Open("sqlite3", "file:ent?mode=memory&cache=shared&_fk=1")
 	if err != nil {
 		panic(err.Error())
 	}
-
-	drv := entsql.OpenDB("sqlite3", SqlDB)
-	EntClient = ent.NewClient(ent.Driver(drv))
 
 	if code := m.Run(); code != 0 {
 		panic(fmt.Errorf("test exited with non-zero code: %d", code))
@@ -104,7 +101,7 @@ func TestDeleteUser(t *testing.T) {
 		Email:    "testUser2@mail.example",
 	})
 	r.NoError(err)
-	r.NotNil(createdUser)
+	r.NotNil(createdUser2)
 
 	r.NoError(app.DeleteUserById(ctx, createdUser.Id))
 
@@ -112,6 +109,47 @@ func TestDeleteUser(t *testing.T) {
 	r.NoError(err)
 
 	require.Equal(t, []user.User{*createdUser2}, allUsers)
+}
+
+func TestGetUsersByIds(t *testing.T) {
+	r, _, ctx, app := initTest(t)
+
+	usersToCreate := []*user.User{
+		ToPtr(user.User{
+			Username: "testUser",
+			Email:    "testUser@mail.example",
+		}),
+		ToPtr(user.User{
+			Username: "testUser2",
+			Email:    "testUser2@mail.example",
+		}),
+		ToPtr(user.User{
+			Username: "testUser3",
+			Email:    "testUser3@mail.example",
+		}),
+	}
+
+	expectedUsers := make([]user.User, len(usersToCreate))
+	for i, u := range usersToCreate {
+		createdUser, err := app.CreateUser(ctx, u)
+		r.NoError(err)
+		r.NotNil(createdUser)
+		expectedUsers[i] = *createdUser
+	}
+
+	query, _ := SqlDB.Query("SELECT id, username, email from users")
+	var users []user.User
+	for query.Next() {
+		var u user.User
+		query.Scan(&u.Id, &u.Username, &u.Email)
+		users = append(users, u)
+		fmt.Printf("%#v\n", u)
+	}
+
+	actualUsers, err := app.FindAllUsersByFilter(ctx, &user.FindAllFilter{IdsIn: []int{expectedUsers[0].Id, expectedUsers[1].Id}})
+
+	r.NoError(err)
+	r.Equal(expectedUsers[0:2], actualUsers)
 }
 
 func initTest(t *testing.T) (*require.Assertions, zerolog.Logger, context.Context, *App) {
@@ -124,12 +162,17 @@ func initTest(t *testing.T) (*require.Assertions, zerolog.Logger, context.Contex
 }
 
 func initApp(ctx context.Context, t *testing.T, l zerolog.Logger) *App {
+	drv := entsql.OpenDB("sqlite3", SqlDB)
+	EntClient := ent.NewClient(ent.Driver(drv), ent.Log(func(a ...any) {
+		l.Info().Msgf("ent: %s", fmt.Sprint(a))
+	}), ent.Debug())
+
 	userRepository := &entwrap.UserRepository{Client: EntClient.User}
 	userService := &user.Service{UserRepository: userRepository}
 
 	app := &App{
 		Logger:   l,
-		Migrator: entwrap.Migrator{Ent: EntClient},
+		Migrator: entwrap.Migrator{Ent: EntClient, Logger: l},
 		Service:  userService,
 	}
 	require.NoError(t, app.Init(ctx))
@@ -141,4 +184,9 @@ func initApp(ctx context.Context, t *testing.T, l zerolog.Logger) *App {
 	})
 
 	return app
+}
+
+func ToPtr[T any](t T) *T {
+	p := &t
+	return p
 }
