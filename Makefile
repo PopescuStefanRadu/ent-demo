@@ -19,3 +19,9 @@ lint:
 format:
 	gofumpt -l -w .
 	goimports -l -w .
+
+run:
+	go run ./cmd/http/server
+
+build:
+	go build ./cmd/http/server
