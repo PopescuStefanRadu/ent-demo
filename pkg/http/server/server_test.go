@@ -3,6 +3,7 @@ package server_test
 import (
 	"context"
 	"fmt"
+	"github.com/PopescuStefanRadu/ent-demo/pkg"
 	"github.com/PopescuStefanRadu/ent-demo/pkg/http/server"
 	"github.com/cenkalti/backoff/v4"
 	"github.com/rs/zerolog"
@@ -14,7 +15,7 @@ import (
 	"time"
 )
 
-func TestHTTPServer_StartAndGracefulShutdown(t *testing.T) {
+func TestStartAndGracefulShutdown(t *testing.T) {
 	l := zerolog.New(zerolog.NewTestWriter(t))
 
 	getFreePort := func() (port int, err error) {
@@ -32,10 +33,15 @@ func TestHTTPServer_StartAndGracefulShutdown(t *testing.T) {
 	port, err := getFreePort()
 	require.NoError(t, err)
 
-	subject := server.NewHTTPServer(server.Config{
+	subject, err := server.NewHTTPServer(server.Config{
 		ShutdownTimeout: 5 * time.Second,
 		Address:         fmt.Sprintf(":%d", port),
+		AppConfig: &pkg.Config{
+			DBUrl:            "file:ent?mode=memory&cache=shared&_fk=1",
+			DebugPersistence: true,
+		},
 	}, l)
+	require.NoError(t, err)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()

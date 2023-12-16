@@ -3,42 +3,54 @@ package server
 import (
 	"context"
 	"errors"
+	"github.com/PopescuStefanRadu/ent-demo/pkg"
 	"github.com/gin-gonic/gin"
 	"github.com/rs/zerolog"
 	"net/http"
-	"sync/atomic"
 	"time"
 )
 
 type Config struct {
 	ShutdownTimeout time.Duration
 	Address         string
+	AppConfig       *pkg.Config
 }
 
 type HTTPServer struct {
 	Config
+	App    *pkg.App
 	Logger zerolog.Logger
 	Server *http.Server
-	status *atomic.Value
 	Gin    *gin.Engine
 }
 
-func NewHTTPServer(config Config, logger zerolog.Logger) *HTTPServer {
-	router := newRouter()
+func NewHTTPServer(config Config, logger zerolog.Logger) (*HTTPServer, error) {
+	app, err := pkg.NewAppFromConfig(logger, config.AppConfig)
+	if err != nil {
+		return nil, err
+	}
+
+	router := NewRouter(app)
 	srv := &http.Server{
 		Addr:    config.Address,
 		Handler: router,
 	}
 
 	return &HTTPServer{
+		App:    app,
 		Config: config,
 		Logger: logger,
 		Server: srv,
 		Gin:    router,
-	}
+	}, nil
 }
 
 func (h *HTTPServer) Start(ctx context.Context) error {
+	err := h.App.Init(ctx)
+	if err != nil {
+		return err
+	}
+
 	serverErr := make(chan error)
 	defer close(serverErr)
 	go func() {

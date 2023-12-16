@@ -1,15 +1,11 @@
-package pkg
+package pkg_test
 
 import (
-	"context"
 	"database/sql"
-	entsql "entgo.io/ent/dialect/sql"
 	"fmt"
-	"github.com/PopescuStefanRadu/ent-demo/pkg/ent"
-	"github.com/PopescuStefanRadu/ent-demo/pkg/entwrap"
+	"github.com/PopescuStefanRadu/ent-demo/pkg"
 	"github.com/PopescuStefanRadu/ent-demo/pkg/user"
 	_ "github.com/mattn/go-sqlite3"
-	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/require"
 	"testing"
 	"time"
@@ -32,9 +28,9 @@ func TestMain(m *testing.M) {
 }
 
 func TestCreateUser(t *testing.T) {
-	r, _, ctx, app := initTest(t)
+	r, _, ctx, app := pkg.InitTest(t, SqlDB)
 
-	createdUser, err := app.CreateUser(ctx, &user.User{
+	createdUser, err := app.CreateUser(ctx, &user.CreateUserParams{
 		Username: "testUser",
 		Email:    "testUser@mail.example",
 	})
@@ -48,9 +44,9 @@ func TestCreateUser(t *testing.T) {
 }
 
 func TestGetUserById(t *testing.T) {
-	r, _, ctx, app := initTest(t)
+	r, _, ctx, app := pkg.InitTest(t, SqlDB)
 
-	createdUser, err := app.CreateUser(ctx, &user.User{
+	createdUser, err := app.CreateUser(ctx, &user.CreateUserParams{
 		Username: "testUser",
 		Email:    "testUser@mail.example",
 	})
@@ -63,16 +59,16 @@ func TestGetUserById(t *testing.T) {
 }
 
 func TestUpdateUser(t *testing.T) {
-	r, _, ctx, app := initTest(t)
+	r, _, ctx, app := pkg.InitTest(t, SqlDB)
 
-	createdUser, err := app.CreateUser(ctx, &user.User{
+	createdUser, err := app.CreateUser(ctx, &user.CreateUserParams{
 		Username: "testUser",
 		Email:    "testUser@mail.example",
 	})
 	r.NoError(err)
 	r.NotNil(createdUser)
 
-	updatedUser, err := app.UpdateUser(ctx, &user.User{
+	updatedUser, err := app.UpdateUser(ctx, &user.UpdateUserParams{
 		Id:       createdUser.Id,
 		Username: "testUser2",
 		Email:    "testUser2@mail.example",
@@ -87,16 +83,16 @@ func TestUpdateUser(t *testing.T) {
 }
 
 func TestDeleteUser(t *testing.T) {
-	r, _, ctx, app := initTest(t)
+	r, _, ctx, app := pkg.InitTest(t, SqlDB)
 
-	createdUser, err := app.CreateUser(ctx, &user.User{
+	createdUser, err := app.CreateUser(ctx, &user.CreateUserParams{
 		Username: "testUser",
 		Email:    "testUser@mail.example",
 	})
 	r.NoError(err)
 	r.NotNil(createdUser)
 
-	createdUser2, err := app.CreateUser(ctx, &user.User{
+	createdUser2, err := app.CreateUser(ctx, &user.CreateUserParams{
 		Username: "testUser2",
 		Email:    "testUser2@mail.example",
 	})
@@ -112,18 +108,18 @@ func TestDeleteUser(t *testing.T) {
 }
 
 func TestGetUsersByIds(t *testing.T) {
-	r, _, ctx, app := initTest(t)
+	r, _, ctx, app := pkg.InitTest(t, SqlDB)
 
-	usersToCreate := []*user.User{
-		ToPtr(user.User{
+	usersToCreate := []*user.CreateUserParams{
+		ToPtr(user.CreateUserParams{
 			Username: "testUser",
 			Email:    "testUser@mail.example",
 		}),
-		ToPtr(user.User{
+		ToPtr(user.CreateUserParams{
 			Username: "testUser2",
 			Email:    "testUser2@mail.example",
 		}),
-		ToPtr(user.User{
+		ToPtr(user.CreateUserParams{
 			Username: "testUser3",
 			Email:    "testUser3@mail.example",
 		}),
@@ -137,53 +133,10 @@ func TestGetUsersByIds(t *testing.T) {
 		expectedUsers[i] = *createdUser
 	}
 
-	query, _ := SqlDB.Query("SELECT id, username, email from users")
-	var users []user.User
-	for query.Next() {
-		var u user.User
-		query.Scan(&u.Id, &u.Username, &u.Email)
-		users = append(users, u)
-		fmt.Printf("%#v\n", u)
-	}
-
 	actualUsers, err := app.FindAllUsersByFilter(ctx, &user.FindAllFilter{IdsIn: []int{expectedUsers[0].Id, expectedUsers[1].Id}})
 
 	r.NoError(err)
 	r.Equal(expectedUsers[0:2], actualUsers)
-}
-
-func initTest(t *testing.T) (*require.Assertions, zerolog.Logger, context.Context, *App) {
-	r := require.New(t)
-	l := zerolog.New(zerolog.NewTestWriter(t))
-	ctx := l.WithContext(context.Background())
-	app := initApp(ctx, t, l)
-
-	return r, l, ctx, app
-}
-
-func initApp(ctx context.Context, t *testing.T, l zerolog.Logger) *App {
-	drv := entsql.OpenDB("sqlite3", SqlDB)
-	EntClient := ent.NewClient(ent.Driver(drv), ent.Log(func(a ...any) {
-		l.Info().Msgf("ent: %s", fmt.Sprint(a))
-	}), ent.Debug())
-
-	userRepository := &entwrap.UserRepository{Client: EntClient.User}
-	userService := &user.Service{UserRepository: userRepository}
-
-	app := &App{
-		Logger:   l,
-		Migrator: entwrap.Migrator{Ent: EntClient, Logger: l},
-		Service:  userService,
-	}
-	require.NoError(t, app.Init(ctx))
-
-	t.Cleanup(func() {
-		if err := app.Cleanup(ctx); err != nil {
-			l.Err(err).Msg("Could not clean up application state")
-		}
-	})
-
-	return app
 }
 
 func ToPtr[T any](t T) *T {

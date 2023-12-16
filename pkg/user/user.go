@@ -13,6 +13,17 @@ type User struct {
 	UpdatedAt time.Time
 }
 
+type CreateUserParams struct {
+	Username string
+	Email    string
+}
+
+type UpdateUserParams struct {
+	Id       int
+	Username string
+	Email    string
+}
+
 type Service struct {
 	UserRepository Repository
 }
@@ -24,8 +35,8 @@ type FindAllFilter struct {
 type Repository interface {
 	GetById(context.Context, int) (*User, error)
 	FindAllByFilter(context.Context, *FindAllFilter) ([]User, error)
-	Create(context.Context, *User) (*User, error)
-	Update(context.Context, *User) (*User, error)
+	Create(context.Context, *CreateUserParams) (*User, error)
+	Update(context.Context, *UpdateUserParams) (*User, error)
 	DeleteById(context.Context, int) error
 	DeleteAll(ctx context.Context) (int, error)
 }
@@ -38,11 +49,11 @@ func (s *Service) FindAllUsersByFilter(ctx context.Context, filter *FindAllFilte
 	return s.UserRepository.FindAllByFilter(ctx, filter)
 }
 
-func (s *Service) CreateUser(ctx context.Context, u *User) (*User, error) {
+func (s *Service) CreateUser(ctx context.Context, u *CreateUserParams) (*User, error) {
 	return s.UserRepository.Create(ctx, u)
 }
 
-func (s *Service) UpdateUser(ctx context.Context, u *User) (*User, error) {
+func (s *Service) UpdateUser(ctx context.Context, u *UpdateUserParams) (*User, error) {
 	return s.UserRepository.Update(ctx, u)
 }
 

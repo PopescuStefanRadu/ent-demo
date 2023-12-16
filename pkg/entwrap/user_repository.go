@@ -16,7 +16,7 @@ func (ur *UserRepository) GetById(ctx context.Context, id int) (*businessUser.Us
 	return toPtrBusinessModel(u), err
 }
 
-func (ur *UserRepository) Create(ctx context.Context, u *businessUser.User) (*businessUser.User, error) {
+func (ur *UserRepository) Create(ctx context.Context, u *businessUser.CreateUserParams) (*businessUser.User, error) {
 	createdUser, err := ur.Client.Create().
 		SetUsername(u.Username).
 		SetEmail(u.Email).
@@ -44,7 +44,7 @@ func (ur *UserRepository) FindAllByFilter(ctx context.Context, filter *businessU
 	return toBusinessModelSlice(filteredUsers), nil
 }
 
-func (ur *UserRepository) Update(ctx context.Context, u *businessUser.User) (*businessUser.User, error) {
+func (ur *UserRepository) Update(ctx context.Context, u *businessUser.UpdateUserParams) (*businessUser.User, error) {
 	err := ur.Client.Update().
 		Where(user.ID(u.Id)).
 		SetUsername(u.Username).
