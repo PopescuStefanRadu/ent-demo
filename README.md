@@ -10,3 +10,7 @@ docker build -t ent:latest .
 ```shell
 docker run -p 8080:8080 ent
 ```
+
+### TODO
+ 
+ - add more documentation
