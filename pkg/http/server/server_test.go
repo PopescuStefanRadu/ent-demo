@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/PopescuStefanRadu/ent-demo/pkg"
+	"github.com/PopescuStefanRadu/ent-demo/pkg/external/dog"
 	"github.com/PopescuStefanRadu/ent-demo/pkg/http/server"
 	"github.com/cenkalti/backoff/v4"
 	"github.com/rs/zerolog"
@@ -39,6 +40,7 @@ func TestStartAndGracefulShutdown(t *testing.T) {
 		AppConfig: &pkg.Config{
 			DBUrl:            "file:ent?mode=memory&cache=shared&_fk=1",
 			DebugPersistence: true,
+			DogClientConfig:  dog.ClientConfig{},
 		},
 	}, l)
 	require.NoError(t, err)

@@ -2,6 +2,7 @@
 
 install-dependencies-locally:
 	go install entgo.io/ent/cmd/ent@v0.12.5
+	go install go.uber.org/mock/mockgen@latest
 
 test:
 	go test -count=1 ./...

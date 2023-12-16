@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"database/sql"
 	"encoding/json"
+	"go.uber.org/mock/gomock"
 
 	"fmt"
 	"github.com/PopescuStefanRadu/ent-demo/pkg"
@@ -32,7 +33,9 @@ func TestMain(m *testing.M) {
 }
 
 func TestCreate(t *testing.T) {
-	r, _, _, app := pkg.InitTest(t, SqlDB)
+	r, _, _, app, mocks := pkg.InitTest(t, SqlDB)
+
+	mocks.DogClient.EXPECT().GetRandomDogUrl(gomock.Any()).Return("https://example.org", nil).Times(1)
 
 	gin := server.NewRouter(app)
 
@@ -60,18 +63,21 @@ func TestCreate(t *testing.T) {
 
 	r.Equal(response.Response[response.User]{
 		Result: response.User{
-			Id:        actualResp.Result.Id,
-			Username:  "testUser",
-			Email:     "testUser@example.com",
-			CreatedAt: actualResp.Result.CreatedAt,
-			UpdatedAt: actualResp.Result.UpdatedAt,
+			Id:          actualResp.Result.Id,
+			Username:    "testUser",
+			Email:       "testUser@example.com",
+			DogPhotoUrl: "https://example.org",
+			CreatedAt:   actualResp.Result.CreatedAt,
+			UpdatedAt:   actualResp.Result.UpdatedAt,
 		},
 		Errors: nil,
 	}, actualResp)
 }
 
 func TestGet(t *testing.T) {
-	r, _, ctx, app := pkg.InitTest(t, SqlDB)
+	r, _, ctx, app, mocks := pkg.InitTest(t, SqlDB)
+
+	mocks.DogClient.EXPECT().GetRandomDogUrl(gomock.Any()).Return("https://example.org", nil).Times(2)
 
 	gin := server.NewRouter(app)
 
@@ -94,17 +100,20 @@ func TestGet(t *testing.T) {
 	r.Equal(http.StatusOK, w.Code)
 	r.Equal(response.Response[response.User]{
 		Result: response.User{
-			Id:        actualResp.Result.Id,
-			Username:  "testUser",
-			Email:     "testUser@example.com",
-			CreatedAt: actualResp.Result.CreatedAt,
-			UpdatedAt: actualResp.Result.UpdatedAt,
+			Id:          actualResp.Result.Id,
+			Username:    "testUser",
+			Email:       "testUser@example.com",
+			DogPhotoUrl: "https://example.org",
+			CreatedAt:   actualResp.Result.CreatedAt,
+			UpdatedAt:   actualResp.Result.UpdatedAt,
 		},
 	}, actualResp)
 }
 
 func TestUpdate(t *testing.T) {
-	r, _, ctx, app := pkg.InitTest(t, SqlDB)
+	r, _, ctx, app, mocks := pkg.InitTest(t, SqlDB)
+
+	mocks.DogClient.EXPECT().GetRandomDogUrl(gomock.Any()).Return("https://example.org", nil).Times(2)
 
 	gin := server.NewRouter(app)
 
@@ -133,17 +142,20 @@ func TestUpdate(t *testing.T) {
 	r.Equal(http.StatusOK, w.Code)
 	r.Equal(response.Response[response.User]{
 		Result: response.User{
-			Id:        actualResp.Result.Id,
-			Username:  "updatedTestUser",
-			Email:     "updatedTestUser@example.com",
-			CreatedAt: actualResp.Result.CreatedAt,
-			UpdatedAt: actualResp.Result.UpdatedAt,
+			Id:          actualResp.Result.Id,
+			Username:    "updatedTestUser",
+			Email:       "updatedTestUser@example.com",
+			DogPhotoUrl: "https://example.org",
+			CreatedAt:   actualResp.Result.CreatedAt,
+			UpdatedAt:   actualResp.Result.UpdatedAt,
 		},
 	}, actualResp)
 }
 
 func TestDelete(t *testing.T) {
-	r, _, ctx, app := pkg.InitTest(t, SqlDB)
+	r, _, ctx, app, mocks := pkg.InitTest(t, SqlDB)
+
+	mocks.DogClient.EXPECT().GetRandomDogUrl(gomock.Any()).Return("https://example.org", nil).Times(1)
 
 	gin := server.NewRouter(app)
 
@@ -167,7 +179,9 @@ func TestDelete(t *testing.T) {
 }
 
 func TestGetFiltered(t *testing.T) {
-	r, _, ctx, app := pkg.InitTest(t, SqlDB)
+	r, _, ctx, app, mocks := pkg.InitTest(t, SqlDB)
+
+	mocks.DogClient.EXPECT().GetRandomDogUrl(gomock.Any()).Return("https://example.org", nil).Times(5)
 
 	gin := server.NewRouter(app)
 

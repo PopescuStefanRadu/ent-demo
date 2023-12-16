@@ -7,10 +7,13 @@ import (
 	"fmt"
 	"github.com/PopescuStefanRadu/ent-demo/pkg/ent"
 	"github.com/PopescuStefanRadu/ent-demo/pkg/entwrap"
+	"github.com/PopescuStefanRadu/ent-demo/pkg/external/dog"
 	"github.com/PopescuStefanRadu/ent-demo/pkg/user"
+	mock_user "github.com/PopescuStefanRadu/ent-demo/pkg/user/mock"
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/require"
+	"go.uber.org/mock/gomock"
 	"testing"
 )
 
@@ -19,12 +22,17 @@ var DBDriverName = "sqlite3"
 type Config struct {
 	DBUrl            string
 	DebugPersistence bool
+	DogClientConfig  dog.ClientConfig
 }
 
 type App struct {
 	Logger   zerolog.Logger
 	Migrator Migrator
 	*user.Service
+}
+
+type Mocks struct {
+	DogClient *mock_user.MockDog
 }
 
 type Migrator interface {
@@ -49,7 +57,8 @@ func NewAppFromConfig(l zerolog.Logger, cfg *Config) (*App, error) {
 	EntClient := ent.NewClient(opts...)
 
 	userRepository := &entwrap.UserRepository{Client: EntClient.User}
-	userService := &user.Service{UserRepository: userRepository}
+	dogClient := dog.NewClient(cfg.DogClientConfig)
+	userService := &user.Service{UserRepository: userRepository, DogClient: dogClient}
 
 	return &App{
 		Logger:   l,
@@ -77,23 +86,29 @@ func (a App) Cleanup(ctx context.Context) error {
 	return nil
 }
 
-func InitTest(t *testing.T, db *sql.DB) (*require.Assertions, zerolog.Logger, context.Context, *App) {
+func InitTest(t *testing.T, db *sql.DB) (*require.Assertions, zerolog.Logger, context.Context, *App, Mocks) {
 	r := require.New(t)
 	l := zerolog.New(zerolog.NewTestWriter(t))
 	ctx := l.WithContext(context.Background())
-	app := initApp(ctx, t, l, db)
 
-	return r, l, ctx, app
+	ctl := gomock.NewController(t)
+
+	mockDog := mock_user.NewMockDog(ctl)
+	mocks := Mocks{DogClient: mockDog}
+
+	app := initApp(ctx, t, l, db, mocks)
+
+	return r, l, ctx, app, mocks
 }
 
-func initApp(ctx context.Context, t *testing.T, l zerolog.Logger, db *sql.DB) *App {
+func initApp(ctx context.Context, t *testing.T, l zerolog.Logger, db *sql.DB, mocks Mocks) *App {
 	drv := entsql.OpenDB("sqlite3", db)
 	EntClient := ent.NewClient(ent.Driver(drv), ent.Log(func(a ...any) {
 		l.Info().Msgf("ent: %s", fmt.Sprint(a))
 	}), ent.Debug())
 
 	userRepository := &entwrap.UserRepository{Client: EntClient.User}
-	userService := &user.Service{UserRepository: userRepository}
+	userService := &user.Service{UserRepository: userRepository, DogClient: mocks.DogClient}
 
 	app := &App{
 		Logger:   l,

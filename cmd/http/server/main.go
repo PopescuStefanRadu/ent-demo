@@ -3,8 +3,10 @@ package main
 import (
 	"context"
 	"github.com/PopescuStefanRadu/ent-demo/pkg"
+	"github.com/PopescuStefanRadu/ent-demo/pkg/external/dog"
 	"github.com/PopescuStefanRadu/ent-demo/pkg/http/server"
 	"github.com/rs/zerolog"
+	"github.com/sony/gobreaker"
 	"os"
 	"os/signal"
 	"syscall"
@@ -25,6 +27,13 @@ func main() {
 		AppConfig: &pkg.Config{
 			DBUrl:            "file:ent?mode=memory&cache=shared&_fk=1",
 			DebugPersistence: true,
+			DogClientConfig: dog.ClientConfig{
+				Enabled: true,
+				BaseUrl: "https://random.dog",
+				CircuitBreakerSettings: gobreaker.Settings{
+					Name: "dog",
+				},
+			},
 		},
 	}, l)
 
