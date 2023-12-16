@@ -4,10 +4,10 @@ import (
 	"bytes"
 	"database/sql"
 	"encoding/json"
+	"github.com/PopescuStefanRadu/ent-demo/pkg/app"
 	"go.uber.org/mock/gomock"
 
 	"fmt"
-	"github.com/PopescuStefanRadu/ent-demo/pkg"
 	"github.com/PopescuStefanRadu/ent-demo/pkg/http/server"
 	"github.com/PopescuStefanRadu/ent-demo/pkg/http/server/request"
 	"github.com/PopescuStefanRadu/ent-demo/pkg/http/server/response"
@@ -33,7 +33,7 @@ func TestMain(m *testing.M) {
 }
 
 func TestCreate(t *testing.T) {
-	r, _, _, app, mocks := pkg.InitTest(t, SqlDB)
+	r, _, _, app, mocks := app.InitTest(t, SqlDB)
 
 	mocks.DogClient.EXPECT().GetRandomDogUrl(gomock.Any()).Return("https://example.org", nil).Times(1)
 
@@ -75,7 +75,7 @@ func TestCreate(t *testing.T) {
 }
 
 func TestGet(t *testing.T) {
-	r, _, ctx, app, mocks := pkg.InitTest(t, SqlDB)
+	r, _, ctx, app, mocks := app.InitTest(t, SqlDB)
 
 	mocks.DogClient.EXPECT().GetRandomDogUrl(gomock.Any()).Return("https://example.org", nil).Times(2)
 
@@ -111,7 +111,7 @@ func TestGet(t *testing.T) {
 }
 
 func TestUpdate(t *testing.T) {
-	r, _, ctx, app, mocks := pkg.InitTest(t, SqlDB)
+	r, _, ctx, app, mocks := app.InitTest(t, SqlDB)
 
 	mocks.DogClient.EXPECT().GetRandomDogUrl(gomock.Any()).Return("https://example.org", nil).Times(2)
 
@@ -123,7 +123,7 @@ func TestUpdate(t *testing.T) {
 	})
 	r.NoError(err)
 
-	body, err := json.Marshal(request.UpdateUser{
+	body, err := json.Marshal(request.UpdateUserBody{
 		Username: "updatedTestUser",
 		Email:    "updatedTestUser@example.com",
 	})
@@ -153,7 +153,7 @@ func TestUpdate(t *testing.T) {
 }
 
 func TestDelete(t *testing.T) {
-	r, _, ctx, app, mocks := pkg.InitTest(t, SqlDB)
+	r, _, ctx, app, mocks := app.InitTest(t, SqlDB)
 
 	mocks.DogClient.EXPECT().GetRandomDogUrl(gomock.Any()).Return("https://example.org", nil).Times(1)
 
@@ -179,7 +179,7 @@ func TestDelete(t *testing.T) {
 }
 
 func TestGetFiltered(t *testing.T) {
-	r, _, ctx, app, mocks := pkg.InitTest(t, SqlDB)
+	r, _, ctx, app, mocks := app.InitTest(t, SqlDB)
 
 	mocks.DogClient.EXPECT().GetRandomDogUrl(gomock.Any()).Return("https://example.org", nil).Times(5)
 

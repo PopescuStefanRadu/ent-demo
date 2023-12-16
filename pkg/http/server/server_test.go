@@ -3,7 +3,7 @@ package server_test
 import (
 	"context"
 	"fmt"
-	"github.com/PopescuStefanRadu/ent-demo/pkg"
+	"github.com/PopescuStefanRadu/ent-demo/pkg/app"
 	"github.com/PopescuStefanRadu/ent-demo/pkg/external/dog"
 	"github.com/PopescuStefanRadu/ent-demo/pkg/http/server"
 	"github.com/cenkalti/backoff/v4"
@@ -37,7 +37,7 @@ func TestStartAndGracefulShutdown(t *testing.T) {
 	subject, err := server.NewHTTPServer(server.Config{
 		ShutdownTimeout: 5 * time.Second,
 		Address:         fmt.Sprintf(":%d", port),
-		AppConfig: &pkg.Config{
+		AppConfig: &app.Config{
 			DBUrl:            "file:ent?mode=memory&cache=shared&_fk=1",
 			DebugPersistence: true,
 			DogClientConfig:  dog.ClientConfig{},

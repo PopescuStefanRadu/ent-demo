@@ -3,7 +3,7 @@ package server
 import (
 	"context"
 	"errors"
-	"github.com/PopescuStefanRadu/ent-demo/pkg"
+	"github.com/PopescuStefanRadu/ent-demo/pkg/app"
 	"github.com/gin-gonic/gin"
 	"github.com/rs/zerolog"
 	"net/http"
@@ -13,19 +13,19 @@ import (
 type Config struct {
 	ShutdownTimeout time.Duration
 	Address         string
-	AppConfig       *pkg.Config
+	AppConfig       *app.Config
 }
 
 type HTTPServer struct {
 	Config
-	App    *pkg.App
+	App    *app.App
 	Logger zerolog.Logger
 	Server *http.Server
 	Gin    *gin.Engine
 }
 
 func NewHTTPServer(config Config, logger zerolog.Logger) (*HTTPServer, error) {
-	app, err := pkg.NewAppFromConfig(logger, config.AppConfig)
+	app, err := app.NewAppFromConfig(logger, config.AppConfig)
 	if err != nil {
 		return nil, err
 	}

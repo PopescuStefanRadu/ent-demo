@@ -2,7 +2,7 @@ package main
 
 import (
 	"context"
-	"github.com/PopescuStefanRadu/ent-demo/pkg"
+	"github.com/PopescuStefanRadu/ent-demo/pkg/app"
 	"github.com/PopescuStefanRadu/ent-demo/pkg/external/dog"
 	"github.com/PopescuStefanRadu/ent-demo/pkg/http/server"
 	"github.com/rs/zerolog"
@@ -24,7 +24,7 @@ func main() {
 	srv, err := server.NewHTTPServer(server.Config{
 		ShutdownTimeout: 30 * time.Second,
 		Address:         ":8080",
-		AppConfig: &pkg.Config{
+		AppConfig: &app.Config{
 			DBUrl:            "file:ent?mode=memory&cache=shared&_fk=1",
 			DebugPersistence: true,
 			DogClientConfig: dog.ClientConfig{

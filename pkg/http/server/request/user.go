@@ -5,8 +5,11 @@ type CreateUser struct {
 	Email    string `json:"email"`
 }
 
-type UpdateUser struct {
-	Id       int    `uri:"id"`
+type UpdateUserURI struct {
+	Id int `json:"id" uri:"id" binding:"required"`
+}
+
+type UpdateUserBody struct {
 	Username string `json:"username"`
 	Email    string `json:"email"`
 }

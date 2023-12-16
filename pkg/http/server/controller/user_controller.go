@@ -14,7 +14,7 @@ type User struct {
 
 func (ctl *User) Get(c *gin.Context) {
 	q := struct {
-		Id int `uri:"id" binding:"required"`
+		Id int `uri:"id" binding:"required" json:"id"`
 	}{}
 
 	if err := c.ShouldBindUri(&q); err != nil {
@@ -50,19 +50,24 @@ func (ctl *User) Create(c *gin.Context) {
 }
 
 func (ctl *User) Update(c *gin.Context) {
-	var q request.UpdateUser
-
-	if err := c.ShouldBind(&q); err != nil {
-		_ = c.Error(err)
-		return
-	}
+	var q request.UpdateUserURI
+	var b request.UpdateUserBody
 
 	if err := c.ShouldBindUri(&q); err != nil {
 		_ = c.Error(err)
 		return
 	}
 
-	u := user.UpdateUserParams(q)
+	if err := c.ShouldBind(&b); err != nil {
+		_ = c.Error(err)
+		return
+	}
+
+	u := user.UpdateUserParams{
+		Id:       q.Id,
+		Username: b.Username,
+		Email:    b.Email,
+	}
 	updated, err := ctl.UserService.UpdateUser(c, &u)
 	if err != nil {
 		_ = c.Error(err)

@@ -1,9 +1,9 @@
-package pkg_test
+package app_test
 
 import (
 	"database/sql"
 	"fmt"
-	"github.com/PopescuStefanRadu/ent-demo/pkg"
+	"github.com/PopescuStefanRadu/ent-demo/pkg/app"
 	"github.com/PopescuStefanRadu/ent-demo/pkg/user"
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/stretchr/testify/require"
@@ -29,7 +29,7 @@ func TestMain(m *testing.M) {
 }
 
 func TestCreateUser(t *testing.T) {
-	r, _, ctx, app, mocks := pkg.InitTest(t, SqlDB)
+	r, _, ctx, app, mocks := app.InitTest(t, SqlDB)
 
 	mocks.DogClient.EXPECT().GetRandomDogUrl(gomock.Any()).Return("https://example.org", nil).Times(1)
 
@@ -47,7 +47,7 @@ func TestCreateUser(t *testing.T) {
 }
 
 func TestGetUserById(t *testing.T) {
-	r, _, ctx, app, mocks := pkg.InitTest(t, SqlDB)
+	r, _, ctx, app, mocks := app.InitTest(t, SqlDB)
 
 	mocks.DogClient.EXPECT().GetRandomDogUrl(gomock.Any()).Return("https://example.org", nil).Times(2)
 
@@ -72,7 +72,7 @@ func TestGetUserById(t *testing.T) {
 }
 
 func TestUpdateUser(t *testing.T) {
-	r, _, ctx, app, mocks := pkg.InitTest(t, SqlDB)
+	r, _, ctx, app, mocks := app.InitTest(t, SqlDB)
 
 	mocks.DogClient.EXPECT().GetRandomDogUrl(gomock.Any()).Return("https://example.org", nil).Times(2)
 
@@ -99,7 +99,7 @@ func TestUpdateUser(t *testing.T) {
 }
 
 func TestDeleteUser(t *testing.T) {
-	r, _, ctx, app, mocks := pkg.InitTest(t, SqlDB)
+	r, _, ctx, app, mocks := app.InitTest(t, SqlDB)
 
 	mocks.DogClient.EXPECT().GetRandomDogUrl(gomock.Any()).Return("https://example.org", nil).Times(3)
 
@@ -133,7 +133,7 @@ func TestDeleteUser(t *testing.T) {
 }
 
 func TestGetUsersByIds(t *testing.T) {
-	r, _, ctx, app, mocks := pkg.InitTest(t, SqlDB)
+	r, _, ctx, app, mocks := app.InitTest(t, SqlDB)
 
 	mocks.DogClient.EXPECT().GetRandomDogUrl(gomock.Any()).Return("https://example.org", nil).Times(5)
 
