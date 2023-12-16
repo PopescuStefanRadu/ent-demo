@@ -3,18 +3,17 @@ package app_test
 import (
 	"database/sql"
 	"fmt"
+	"testing"
+	"time"
+
 	"github.com/PopescuStefanRadu/ent-demo/pkg/app"
 	"github.com/PopescuStefanRadu/ent-demo/pkg/user"
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
-	"testing"
-	"time"
 )
 
-var (
-	SqlDB *sql.DB
-)
+var SqlDB *sql.DB //nolint:golint,revive,stylecheck
 
 func TestMain(m *testing.M) {
 	var err error
@@ -31,7 +30,7 @@ func TestMain(m *testing.M) {
 func TestCreateUser(t *testing.T) {
 	r, _, ctx, app, mocks := app.InitTest(t, SqlDB)
 
-	mocks.DogClient.EXPECT().GetRandomDogUrl(gomock.Any()).Return("https://example.org", nil).Times(1)
+	mocks.DogClient.EXPECT().GetRandomDogURL(gomock.Any()).Return("https://example.org", nil).Times(1)
 
 	createdUser, err := app.CreateUser(ctx, &user.CreateUserParams{
 		Username: "testUser",
@@ -39,7 +38,7 @@ func TestCreateUser(t *testing.T) {
 	})
 
 	r.NoError(err)
-	r.NotEqual(0, createdUser.Id)
+	r.NotEqual(0, createdUser.ID)
 	r.NotEqual(time.Time{}, createdUser.UpdatedAt)
 	r.NotEqual(time.Time{}, createdUser.CreatedAt)
 	r.Equal("testUser", createdUser.Username)
@@ -49,7 +48,7 @@ func TestCreateUser(t *testing.T) {
 func TestGetUserById(t *testing.T) {
 	r, _, ctx, app, mocks := app.InitTest(t, SqlDB)
 
-	mocks.DogClient.EXPECT().GetRandomDogUrl(gomock.Any()).Return("https://example.org", nil).Times(2)
+	mocks.DogClient.EXPECT().GetRandomDogURL(gomock.Any()).Return("https://example.org", nil).Times(2)
 
 	createdUser, err := app.CreateUser(ctx, &user.CreateUserParams{
 		Username: "testUser",
@@ -57,15 +56,15 @@ func TestGetUserById(t *testing.T) {
 	})
 	r.NoError(err)
 
-	userById, err := app.GetUserById(ctx, createdUser.Id)
+	userByID, err := app.GetUserByID(ctx, createdUser.ID)
 	r.NoError(err)
 
-	r.Equal(createdUser, userById)
+	r.Equal(createdUser, userByID)
 	r.Equal(&user.User{
-		Id:          createdUser.Id,
+		ID:          createdUser.ID,
 		Username:    "testUser",
 		Email:       "testUser@mail.example",
-		DogPhotoUrl: "https://example.org",
+		DogPhotoURL: "https://example.org",
 		CreatedAt:   createdUser.CreatedAt,
 		UpdatedAt:   createdUser.UpdatedAt,
 	}, createdUser)
@@ -74,7 +73,7 @@ func TestGetUserById(t *testing.T) {
 func TestUpdateUser(t *testing.T) {
 	r, _, ctx, app, mocks := app.InitTest(t, SqlDB)
 
-	mocks.DogClient.EXPECT().GetRandomDogUrl(gomock.Any()).Return("https://example.org", nil).Times(2)
+	mocks.DogClient.EXPECT().GetRandomDogURL(gomock.Any()).Return("https://example.org", nil).Times(2)
 
 	createdUser, err := app.CreateUser(ctx, &user.CreateUserParams{
 		Username: "testUser",
@@ -84,24 +83,24 @@ func TestUpdateUser(t *testing.T) {
 	r.NotNil(createdUser)
 
 	updatedUser, err := app.UpdateUser(ctx, &user.UpdateUserParams{
-		Id:       createdUser.Id,
+		ID:       createdUser.ID,
 		Username: "testUser2",
 		Email:    "testUser2@mail.example",
 	})
 	r.NoError(err)
 
-	r.Equal(createdUser.Id, updatedUser.Id)
+	r.Equal(createdUser.ID, updatedUser.ID)
 	r.Equal("testUser2", updatedUser.Username)
 	r.Equal("testUser2@mail.example", updatedUser.Email)
 	r.Equal(createdUser.CreatedAt, updatedUser.CreatedAt)
-	r.Equal(createdUser.DogPhotoUrl, updatedUser.DogPhotoUrl)
+	r.Equal(createdUser.DogPhotoURL, updatedUser.DogPhotoURL)
 	r.LessOrEqual(createdUser.UpdatedAt, updatedUser.UpdatedAt)
 }
 
 func TestDeleteUser(t *testing.T) {
 	r, _, ctx, app, mocks := app.InitTest(t, SqlDB)
 
-	mocks.DogClient.EXPECT().GetRandomDogUrl(gomock.Any()).Return("https://example.org", nil).Times(3)
+	mocks.DogClient.EXPECT().GetRandomDogURL(gomock.Any()).Return("https://example.org", nil).Times(3)
 
 	createdUser, err := app.CreateUser(ctx, &user.CreateUserParams{
 		Username: "testUser",
@@ -117,16 +116,16 @@ func TestDeleteUser(t *testing.T) {
 	r.NoError(err)
 	r.NotNil(createdUser2)
 
-	r.NoError(app.DeleteUserById(ctx, createdUser.Id))
+	r.NoError(app.DeleteUserByID(ctx, createdUser.ID))
 
 	allUsers, err := app.FindAllUsersByFilter(ctx, nil)
 	r.NoError(err)
 
 	require.Equal(t, []user.User{{
-		Id:          createdUser2.Id,
+		ID:          createdUser2.ID,
 		Username:    "testUser2",
 		Email:       "testUser2@mail.example",
-		DogPhotoUrl: "https://example.org",
+		DogPhotoURL: "https://example.org",
 		CreatedAt:   createdUser2.CreatedAt,
 		UpdatedAt:   createdUser2.UpdatedAt,
 	}}, allUsers)
@@ -135,7 +134,7 @@ func TestDeleteUser(t *testing.T) {
 func TestGetUsersByIds(t *testing.T) {
 	r, _, ctx, app, mocks := app.InitTest(t, SqlDB)
 
-	mocks.DogClient.EXPECT().GetRandomDogUrl(gomock.Any()).Return("https://example.org", nil).Times(5)
+	mocks.DogClient.EXPECT().GetRandomDogURL(gomock.Any()).Return("https://example.org", nil).Times(5)
 
 	usersToCreate := []*user.CreateUserParams{
 		ToPtr(user.CreateUserParams{
@@ -160,7 +159,8 @@ func TestGetUsersByIds(t *testing.T) {
 		expectedUsers[i] = *createdUser
 	}
 
-	actualUsers, err := app.FindAllUsersByFilter(ctx, &user.FindAllFilter{IdsIn: []int{expectedUsers[0].Id, expectedUsers[1].Id}})
+	filter := &user.FindAllFilter{IdsIn: []int{expectedUsers[0].ID, expectedUsers[1].ID}}
+	actualUsers, err := app.FindAllUsersByFilter(ctx, filter)
 
 	r.NoError(err)
 	r.Equal(expectedUsers[0:2], actualUsers)

@@ -2,6 +2,7 @@ package entwrap
 
 import (
 	"context"
+
 	"github.com/PopescuStefanRadu/ent-demo/pkg/ent"
 	"github.com/PopescuStefanRadu/ent-demo/pkg/ent/user"
 	businessUser "github.com/PopescuStefanRadu/ent-demo/pkg/user"
@@ -11,7 +12,7 @@ type UserRepository struct {
 	Client *ent.UserClient
 }
 
-func (ur *UserRepository) GetById(ctx context.Context, id int) (*businessUser.User, error) {
+func (ur *UserRepository) GetByID(ctx context.Context, id int) (*businessUser.User, error) {
 	u, err := ur.Client.Get(ctx, id)
 	return toPtrBusinessModel(u), err
 }
@@ -28,12 +29,16 @@ func (ur *UserRepository) Create(ctx context.Context, u *businessUser.CreateUser
 	return toPtrBusinessModel(createdUser), err
 }
 
-func (ur *UserRepository) FindAllByFilter(ctx context.Context, filter *businessUser.FindAllFilter) ([]businessUser.User, error) {
+func (ur *UserRepository) FindAllByFilter(
+	ctx context.Context,
+	filter *businessUser.FindAllFilter,
+) ([]businessUser.User, error) {
 	if filter == nil || len(filter.IdsIn) == 0 {
 		users, err := ur.Client.Query().Where().All(ctx)
 		if err != nil {
 			return nil, err
 		}
+
 		return toBusinessModelSlice(users), nil
 	}
 
@@ -41,22 +46,24 @@ func (ur *UserRepository) FindAllByFilter(ctx context.Context, filter *businessU
 	if err != nil {
 		return nil, err
 	}
+
 	return toBusinessModelSlice(filteredUsers), nil
 }
 
 func (ur *UserRepository) Update(ctx context.Context, u *businessUser.UpdateUserParams) (*businessUser.User, error) {
 	err := ur.Client.Update().
-		Where(user.ID(u.Id)).
+		Where(user.ID(u.ID)).
 		SetUsername(u.Username).
 		SetEmail(u.Email).
 		Exec(ctx)
 	if err != nil {
 		return nil, err
 	}
-	return ur.GetById(ctx, u.Id)
 
+	return ur.GetByID(ctx, u.ID)
 }
-func (ur *UserRepository) DeleteById(ctx context.Context, id int) error {
+
+func (ur *UserRepository) DeleteByID(ctx context.Context, id int) error {
 	return ur.Client.DeleteOneID(id).Exec(ctx)
 }
 
@@ -84,12 +91,13 @@ func toPtrBusinessModel(u *ent.User) *businessUser.User {
 	}
 
 	model := toBusinessModel(u)
+
 	return &model
 }
 
 func toBusinessModel(u *ent.User) businessUser.User {
 	return businessUser.User{
-		Id:        u.ID,
+		ID:        u.ID,
 		Username:  u.Username,
 		Email:     u.Email,
 		CreatedAt: u.CreatedAt,

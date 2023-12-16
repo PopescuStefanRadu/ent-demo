@@ -2,16 +2,19 @@ package main
 
 import (
 	"context"
+	"os"
+	"os/signal"
+	"syscall"
+	"time"
+
 	"github.com/PopescuStefanRadu/ent-demo/pkg/app"
 	"github.com/PopescuStefanRadu/ent-demo/pkg/external/dog"
 	"github.com/PopescuStefanRadu/ent-demo/pkg/http/server"
 	"github.com/rs/zerolog"
 	"github.com/sony/gobreaker"
-	"os"
-	"os/signal"
-	"syscall"
-	"time"
 )
+
+const shutdownTimeout = 30 * time.Second
 
 func main() {
 	l := zerolog.New(os.Stdout)
@@ -22,21 +25,20 @@ func main() {
 	ctx = l.WithContext(ctx)
 
 	srv, err := server.NewHTTPServer(server.Config{
-		ShutdownTimeout: 30 * time.Second,
+		ShutdownTimeout: shutdownTimeout,
 		Address:         ":8080",
 		AppConfig: &app.Config{
 			DBUrl:            "file:ent?mode=memory&cache=shared&_fk=1",
 			DebugPersistence: true,
 			DogClientConfig: dog.ClientConfig{
 				Enabled: true,
-				BaseUrl: "https://random.dog",
+				BaseURL: "https://random.dog",
 				CircuitBreakerSettings: gobreaker.Settings{
 					Name: "dog",
 				},
 			},
 		},
 	}, l)
-
 	if err != nil {
 		l.Err(err).Msg("Could not create http server")
 		return

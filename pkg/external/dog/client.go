@@ -2,79 +2,82 @@ package dog
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"io"
+	"net/http"
+
 	"github.com/PopescuStefanRadu/ent-demo/pkg/user"
 	"github.com/goccy/go-json"
 	"github.com/rs/zerolog"
 	"github.com/sony/gobreaker"
-	"io"
-	"net/http"
-	"time"
 )
+
+var ErrCouldNotReadResponse = errors.New("GetRandomDogURL: could not read response")
 
 type ClientConfig struct {
 	Enabled                bool
-	BaseUrl                string
+	BaseURL                string
 	CircuitBreakerSettings gobreaker.Settings
 }
 
 type Client struct {
 	ClientConfig
 	CircuitBreaker *gobreaker.CircuitBreaker
-	HttpClient     *http.Client
+	HTTPClient     *http.Client
 }
 
-type NoOpClient struct {
-}
+type NoOpClient struct{}
 
+//nolint:ireturn,nolintlint
 func NewClient(config ClientConfig) user.Dog {
 	if !config.Enabled {
 		return NoOpClient{}
 	}
+
 	return &Client{
 		ClientConfig:   config,
 		CircuitBreaker: gobreaker.NewCircuitBreaker(config.CircuitBreakerSettings),
-		HttpClient: &http.Client{
-			Timeout: 60 * time.Second,
-		},
+		HTTPClient:     &http.Client{},
 	}
 }
 
-func (c *Client) GetRandomDogUrl(ctx context.Context) (string, error) {
+func (c *Client) GetRandomDogURL(ctx context.Context) (string, error) {
 	l := zerolog.Ctx(ctx)
 
-	path := fmt.Sprintf(c.BaseUrl + "/woof.json")
-	l.Debug().Msgf("GetRandomDogUrl: path: %s", path)
+	path := fmt.Sprintf(c.BaseURL + "/woof.json")
+	l.Debug().Msgf("GetRandomDogURL: path: %s", path)
+
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, path, nil)
 	if err != nil {
-		return "", fmt.Errorf("GetRandomDogUrl: could not create request: %w", err)
+		return "", fmt.Errorf("GetRandomDogURL: could not create request: %w", err)
 	}
 
 	r, err := c.CircuitBreaker.Execute(func() (interface{}, error) {
-		return c.HttpClient.Do(req)
+		return c.HTTPClient.Do(req) //nolint:bodyclose
 	})
 	if err != nil {
-		return "", fmt.Errorf("GetRandomDogUrl: could not execute GET: %w", err)
+		return "", fmt.Errorf("GetRandomDogURL: could not execute GET: %w", err)
 	}
 
-	resp := r.(*http.Response)
+	resp := r.(*http.Response) //nolint:forcetypeassert
 	defer resp.Body.Close()
 
 	bytes, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return "", fmt.Errorf("GetRandomDogUrl: could not read response")
+		return "", ErrCouldNotReadResponse
 	}
 
 	url := struct {
-		Url string `json:"url"`
+		URL string `json:"url"`
 	}{}
 	if err := json.Unmarshal(bytes, &url); err != nil {
-		return "", fmt.Errorf("GetRandomDogUrl: body: %s could not decode response: %w", string(bytes), err)
+		return "", fmt.Errorf("GetRandomDogURL: body: %s could not decode response: %w", string(bytes), err)
 	}
 
-	return url.Url, nil
+	return url.URL, nil
 }
 
-func (c NoOpClient) GetRandomDogUrl(context.Context) (string, error) {
+func (c NoOpClient) GetRandomDogURL(context.Context) (string, error) {
 	return "", nil
 }

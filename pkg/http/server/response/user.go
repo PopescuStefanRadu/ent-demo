@@ -3,10 +3,10 @@ package response
 import "time"
 
 type User struct {
-	Id          int       `json:"id"`
+	ID          int       `json:"id"`
 	Username    string    `json:"username"`
 	Email       string    `json:"email"`
-	DogPhotoUrl string    `json:"dog_photo_url"`
-	CreatedAt   time.Time `json:"createdAt"`
-	UpdatedAt   time.Time `json:"updatedAt"`
+	DogPhotoURL string    `json:"dog_photo_url"`
+	CreatedAt   time.Time `json:"created_at"`
+	UpdatedAt   time.Time `json:"updated_at"`
 }

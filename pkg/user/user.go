@@ -2,17 +2,18 @@ package user
 
 import (
 	"context"
-	"golang.org/x/sync/errgroup"
 	"time"
+
+	"golang.org/x/sync/errgroup"
 )
 
 //go:generate mockgen -source user.go -destination mock/user.go
 
 type User struct {
-	Id          int
+	ID          int
 	Username    string
 	Email       string
-	DogPhotoUrl string
+	DogPhotoURL string
 	CreatedAt   time.Time
 	UpdatedAt   time.Time
 }
@@ -23,7 +24,7 @@ type CreateUserParams struct {
 }
 
 type UpdateUserParams struct {
-	Id       int
+	ID       int
 	Username string
 	Email    string
 }
@@ -38,25 +39,25 @@ type FindAllFilter struct {
 }
 
 type Repository interface {
-	GetById(context.Context, int) (*User, error)
-	FindAllByFilter(context.Context, *FindAllFilter) ([]User, error)
-	Create(context.Context, *CreateUserParams) (*User, error)
-	Update(context.Context, *UpdateUserParams) (*User, error)
-	DeleteById(context.Context, int) error
+	GetByID(ctx context.Context, id int) (*User, error)
+	FindAllByFilter(ctx context.Context, findParams *FindAllFilter) ([]User, error)
+	Create(ctx context.Context, createParams *CreateUserParams) (*User, error)
+	Update(ctx context.Context, updateParams *UpdateUserParams) (*User, error)
+	DeleteByID(ctx context.Context, id int) error
 	DeleteAll(ctx context.Context) (int, error)
 }
 
 type Dog interface {
-	GetRandomDogUrl(ctx context.Context) (string, error)
+	GetRandomDogURL(ctx context.Context) (string, error)
 }
 
-func (s *Service) GetUserById(ctx context.Context, id int) (*User, error) {
-	user, err := s.UserRepository.GetById(ctx, id)
+func (s *Service) GetUserByID(ctx context.Context, id int) (*User, error) {
+	user, err := s.UserRepository.GetByID(ctx, id)
 	if err != nil {
 		return nil, err
 	}
 
-	return s.enrichWithDogUrl(ctx, user)
+	return s.enrichWithDogURL(ctx, user)
 }
 
 func (s *Service) FindAllUsersByFilter(ctx context.Context, filter *FindAllFilter) ([]User, error) {
@@ -73,7 +74,8 @@ func (s *Service) CreateUser(ctx context.Context, u *CreateUserParams) (*User, e
 	if err != nil {
 		return nil, err
 	}
-	return s.enrichWithDogUrl(ctx, created)
+
+	return s.enrichWithDogURL(ctx, created)
 }
 
 func (s *Service) UpdateUser(ctx context.Context, u *UpdateUserParams) (*User, error) {
@@ -81,19 +83,21 @@ func (s *Service) UpdateUser(ctx context.Context, u *UpdateUserParams) (*User, e
 	if err != nil {
 		return nil, err
 	}
-	return s.enrichWithDogUrl(ctx, updated)
+
+	return s.enrichWithDogURL(ctx, updated)
 }
 
-func (s *Service) DeleteUserById(ctx context.Context, id int) error {
-	return s.UserRepository.DeleteById(ctx, id)
+func (s *Service) DeleteUserByID(ctx context.Context, id int) error {
+	return s.UserRepository.DeleteByID(ctx, id)
 }
 
-func (s *Service) enrichWithDogUrl(ctx context.Context, user *User) (*User, error) {
-	url, err := s.DogClient.GetRandomDogUrl(ctx)
+func (s *Service) enrichWithDogURL(ctx context.Context, user *User) (*User, error) {
+	url, err := s.DogClient.GetRandomDogURL(ctx)
 	if err != nil {
 		return nil, err
 	}
-	user.DogPhotoUrl = url
+
+	user.DogPhotoURL = url
 
 	return user, err
 }
@@ -108,16 +112,19 @@ func (s *Service) parallelEnrichWithDogUrls(ctx context.Context, users []User) (
 	resultCh := make(chan []User)
 	go func() {
 		defer close(resultCh)
+
 		for v := range urlsCh {
-			users[v.pos].DogPhotoUrl = v.url
+			users[v.pos].DogPhotoURL = v.url
 		}
+
 		resultCh <- users
 	}()
 
 	for i := range users {
 		iCpy := i
+
 		g.Go(func() error {
-			url, err := s.DogClient.GetRandomDogUrl(groupCtx)
+			url, err := s.DogClient.GetRandomDogURL(groupCtx)
 			if err != nil {
 				return err
 			}
@@ -132,8 +139,9 @@ func (s *Service) parallelEnrichWithDogUrls(ctx context.Context, users []User) (
 	}
 
 	err := g.Wait()
-	close(urlsCh)
-	if err != nil {
+	close(urlsCh) //nolint:wsl // special case
+
+	if err != nil { //nolint:wsl,nolintlint
 		return nil, err
 	}
 

@@ -40,18 +40,18 @@ func (m *MockRepository) EXPECT() *MockRepositoryMockRecorder {
 }
 
 // Create mocks base method.
-func (m *MockRepository) Create(arg0 context.Context, arg1 *user.CreateUserParams) (*user.User, error) {
+func (m *MockRepository) Create(ctx context.Context, createParams *user.CreateUserParams) (*user.User, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Create", arg0, arg1)
+	ret := m.ctrl.Call(m, "Create", ctx, createParams)
 	ret0, _ := ret[0].(*user.User)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // Create indicates an expected call of Create.
-func (mr *MockRepositoryMockRecorder) Create(arg0, arg1 any) *gomock.Call {
+func (mr *MockRepositoryMockRecorder) Create(ctx, createParams any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Create", reflect.TypeOf((*MockRepository)(nil).Create), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Create", reflect.TypeOf((*MockRepository)(nil).Create), ctx, createParams)
 }
 
 // DeleteAll mocks base method.
@@ -69,63 +69,63 @@ func (mr *MockRepositoryMockRecorder) DeleteAll(ctx any) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteAll", reflect.TypeOf((*MockRepository)(nil).DeleteAll), ctx)
 }
 
-// DeleteById mocks base method.
-func (m *MockRepository) DeleteById(arg0 context.Context, arg1 int) error {
+// DeleteByID mocks base method.
+func (m *MockRepository) DeleteByID(ctx context.Context, id int) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "DeleteById", arg0, arg1)
+	ret := m.ctrl.Call(m, "DeleteByID", ctx, id)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
-// DeleteById indicates an expected call of DeleteById.
-func (mr *MockRepositoryMockRecorder) DeleteById(arg0, arg1 any) *gomock.Call {
+// DeleteByID indicates an expected call of DeleteByID.
+func (mr *MockRepositoryMockRecorder) DeleteByID(ctx, id any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteById", reflect.TypeOf((*MockRepository)(nil).DeleteById), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteByID", reflect.TypeOf((*MockRepository)(nil).DeleteByID), ctx, id)
 }
 
 // FindAllByFilter mocks base method.
-func (m *MockRepository) FindAllByFilter(arg0 context.Context, arg1 *user.FindAllFilter) ([]user.User, error) {
+func (m *MockRepository) FindAllByFilter(ctx context.Context, findParams *user.FindAllFilter) ([]user.User, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "FindAllByFilter", arg0, arg1)
+	ret := m.ctrl.Call(m, "FindAllByFilter", ctx, findParams)
 	ret0, _ := ret[0].([]user.User)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // FindAllByFilter indicates an expected call of FindAllByFilter.
-func (mr *MockRepositoryMockRecorder) FindAllByFilter(arg0, arg1 any) *gomock.Call {
+func (mr *MockRepositoryMockRecorder) FindAllByFilter(ctx, findParams any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindAllByFilter", reflect.TypeOf((*MockRepository)(nil).FindAllByFilter), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindAllByFilter", reflect.TypeOf((*MockRepository)(nil).FindAllByFilter), ctx, findParams)
 }
 
-// GetById mocks base method.
-func (m *MockRepository) GetById(arg0 context.Context, arg1 int) (*user.User, error) {
+// GetByID mocks base method.
+func (m *MockRepository) GetByID(ctx context.Context, id int) (*user.User, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetById", arg0, arg1)
+	ret := m.ctrl.Call(m, "GetByID", ctx, id)
 	ret0, _ := ret[0].(*user.User)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// GetById indicates an expected call of GetById.
-func (mr *MockRepositoryMockRecorder) GetById(arg0, arg1 any) *gomock.Call {
+// GetByID indicates an expected call of GetByID.
+func (mr *MockRepositoryMockRecorder) GetByID(ctx, id any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetById", reflect.TypeOf((*MockRepository)(nil).GetById), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetByID", reflect.TypeOf((*MockRepository)(nil).GetByID), ctx, id)
 }
 
 // Update mocks base method.
-func (m *MockRepository) Update(arg0 context.Context, arg1 *user.UpdateUserParams) (*user.User, error) {
+func (m *MockRepository) Update(ctx context.Context, updateParams *user.UpdateUserParams) (*user.User, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Update", arg0, arg1)
+	ret := m.ctrl.Call(m, "Update", ctx, updateParams)
 	ret0, _ := ret[0].(*user.User)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // Update indicates an expected call of Update.
-func (mr *MockRepositoryMockRecorder) Update(arg0, arg1 any) *gomock.Call {
+func (mr *MockRepositoryMockRecorder) Update(ctx, updateParams any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Update", reflect.TypeOf((*MockRepository)(nil).Update), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Update", reflect.TypeOf((*MockRepository)(nil).Update), ctx, updateParams)
 }
 
 // MockDog is a mock of Dog interface.
@@ -151,17 +151,17 @@ func (m *MockDog) EXPECT() *MockDogMockRecorder {
 	return m.recorder
 }
 
-// GetRandomDogUrl mocks base method.
-func (m *MockDog) GetRandomDogUrl(ctx context.Context) (string, error) {
+// GetRandomDogURL mocks base method.
+func (m *MockDog) GetRandomDogURL(ctx context.Context) (string, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetRandomDogUrl", ctx)
+	ret := m.ctrl.Call(m, "GetRandomDogURL", ctx)
 	ret0, _ := ret[0].(string)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// GetRandomDogUrl indicates an expected call of GetRandomDogUrl.
-func (mr *MockDogMockRecorder) GetRandomDogUrl(ctx any) *gomock.Call {
+// GetRandomDogURL indicates an expected call of GetRandomDogURL.
+func (mr *MockDogMockRecorder) GetRandomDogURL(ctx any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetRandomDogUrl", reflect.TypeOf((*MockDog)(nil).GetRandomDogUrl), ctx)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetRandomDogURL", reflect.TypeOf((*MockDog)(nil).GetRandomDogURL), ctx)
 }

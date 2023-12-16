@@ -1,0 +1,27 @@
+linters:
+  enable-all: true
+  disable:
+    - varnamelen
+    - wrapcheck
+    - paralleltest
+    - nonamedreturns
+    - nlreturn
+    - interfacebloat
+    - ifshort
+    - exhaustivestruct
+    - exhaustruct
+    - depguard
+linters-settings:
+  tagliatelle:
+    case:
+      rules:
+        json: snake
+  wsl:
+    force-err-cuddling: true
+issues:
+  exclude-rules:
+    - linters:
+        - wsl
+        - goerr113
+        - gochecknoglobals
+      path: '(.+)_test\.go'

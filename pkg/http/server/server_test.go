@@ -3,19 +3,21 @@ package server_test
 import (
 	"context"
 	"fmt"
+	"io"
+	"net"
+	"net/http"
+	"testing"
+	"time"
+
 	"github.com/PopescuStefanRadu/ent-demo/pkg/app"
 	"github.com/PopescuStefanRadu/ent-demo/pkg/external/dog"
 	"github.com/PopescuStefanRadu/ent-demo/pkg/http/server"
 	"github.com/cenkalti/backoff/v4"
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/require"
-	"io"
-	"net"
-	"net/http"
-	"testing"
-	"time"
 )
 
+//nolint:funlen
 func TestStartAndGracefulShutdown(t *testing.T) {
 	l := zerolog.New(zerolog.NewTestWriter(t))
 
@@ -25,7 +27,7 @@ func TestStartAndGracefulShutdown(t *testing.T) {
 			var l *net.TCPListener
 			if l, err = net.ListenTCP("tcp", a); err == nil {
 				defer l.Close()
-				return l.Addr().(*net.TCPAddr).Port, nil
+				return l.Addr().(*net.TCPAddr).Port, nil //nolint:forcetypeassert
 			}
 		}
 		return
@@ -61,7 +63,7 @@ func TestStartAndGracefulShutdown(t *testing.T) {
 		reqCtx, cancelReq := context.WithTimeout(ctx, maxDuration)
 		defer cancelReq()
 
-		req, err := http.NewRequestWithContext(reqCtx, "GET", fmt.Sprintf("http://localhost:%d/health", port), nil)
+		req, err := http.NewRequestWithContext(reqCtx, http.MethodGet, fmt.Sprintf("http://localhost:%d/health", port), nil)
 		require.NoError(t, err)
 
 		bo := backoff.NewExponentialBackOff()
@@ -72,6 +74,7 @@ func TestStartAndGracefulShutdown(t *testing.T) {
 			if err != nil {
 				return fmt.Errorf("could not execute http request: %w", err)
 			}
+			defer res.Body.Close()
 
 			if status := res.StatusCode; status != 200 {
 				all, _ := io.ReadAll(res.Body)

@@ -24,5 +24,6 @@ func (err *Error) Unwrap() error {
 	if err == nil {
 		return nil
 	}
+
 	return err.Cause
 }

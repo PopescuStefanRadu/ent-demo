@@ -4,21 +4,21 @@ import (
 	"bytes"
 	"database/sql"
 	"encoding/json"
-	"github.com/PopescuStefanRadu/ent-demo/pkg/app"
-	"go.uber.org/mock/gomock"
-
 	"fmt"
-	"github.com/PopescuStefanRadu/ent-demo/pkg/http/server"
-	"github.com/PopescuStefanRadu/ent-demo/pkg/http/server/request"
-	"github.com/PopescuStefanRadu/ent-demo/pkg/http/server/response"
-	"github.com/PopescuStefanRadu/ent-demo/pkg/user"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 	"time"
+
+	application "github.com/PopescuStefanRadu/ent-demo/pkg/app"
+	"github.com/PopescuStefanRadu/ent-demo/pkg/http/server"
+	"github.com/PopescuStefanRadu/ent-demo/pkg/http/server/request"
+	"github.com/PopescuStefanRadu/ent-demo/pkg/http/server/response"
+	"github.com/PopescuStefanRadu/ent-demo/pkg/user"
+	"go.uber.org/mock/gomock"
 )
 
-var SqlDB *sql.DB
+var SqlDB *sql.DB //nolint:golint,revive,stylecheck
 
 func TestMain(m *testing.M) {
 	var err error
@@ -33,9 +33,9 @@ func TestMain(m *testing.M) {
 }
 
 func TestCreate(t *testing.T) {
-	r, _, _, app, mocks := app.InitTest(t, SqlDB)
+	r, _, ctx, app, mocks := application.InitTest(t, SqlDB)
 
-	mocks.DogClient.EXPECT().GetRandomDogUrl(gomock.Any()).Return("https://example.org", nil).Times(1)
+	mocks.DogClient.EXPECT().GetRandomDogURL(gomock.Any()).Return("https://example.org", nil).Times(1)
 
 	gin := server.NewRouter(app)
 
@@ -45,7 +45,7 @@ func TestCreate(t *testing.T) {
 	})
 	r.NoError(err)
 
-	req, err := http.NewRequest(http.MethodPost, "/user", bytes.NewReader(body))
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, "/user", bytes.NewReader(body))
 	r.NoError(err)
 	req.Header.Set("Content-Type", "application/json")
 	w := httptest.NewRecorder()
@@ -57,16 +57,16 @@ func TestCreate(t *testing.T) {
 	var actualResp response.Response[response.User]
 	r.NoError(json.Unmarshal(w.Body.Bytes(), &actualResp))
 
-	r.NotEqual(0, actualResp.Result.Id)
+	r.NotEqual(0, actualResp.Result.ID)
 	r.NotEqual(time.Time{}, actualResp.Result.CreatedAt)
 	r.NotEqual(time.Time{}, actualResp.Result.UpdatedAt)
 
 	r.Equal(response.Response[response.User]{
 		Result: response.User{
-			Id:          actualResp.Result.Id,
+			ID:          actualResp.Result.ID,
 			Username:    "testUser",
 			Email:       "testUser@example.com",
-			DogPhotoUrl: "https://example.org",
+			DogPhotoURL: "https://example.org",
 			CreatedAt:   actualResp.Result.CreatedAt,
 			UpdatedAt:   actualResp.Result.UpdatedAt,
 		},
@@ -75,9 +75,9 @@ func TestCreate(t *testing.T) {
 }
 
 func TestGet(t *testing.T) {
-	r, _, ctx, app, mocks := app.InitTest(t, SqlDB)
+	r, _, ctx, app, mocks := application.InitTest(t, SqlDB)
 
-	mocks.DogClient.EXPECT().GetRandomDogUrl(gomock.Any()).Return("https://example.org", nil).Times(2)
+	mocks.DogClient.EXPECT().GetRandomDogURL(gomock.Any()).Return("https://example.org", nil).Times(2)
 
 	gin := server.NewRouter(app)
 
@@ -87,7 +87,7 @@ func TestGet(t *testing.T) {
 	})
 	r.NoError(err)
 
-	req, err := http.NewRequest(http.MethodGet, fmt.Sprintf("/user/%d", usr.Id), nil)
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, fmt.Sprintf("/user/%d", usr.ID), nil)
 	r.NoError(err)
 	req.Header.Set("Content-Type", "application/json")
 	w := httptest.NewRecorder()
@@ -100,10 +100,10 @@ func TestGet(t *testing.T) {
 	r.Equal(http.StatusOK, w.Code)
 	r.Equal(response.Response[response.User]{
 		Result: response.User{
-			Id:          actualResp.Result.Id,
+			ID:          actualResp.Result.ID,
 			Username:    "testUser",
 			Email:       "testUser@example.com",
-			DogPhotoUrl: "https://example.org",
+			DogPhotoURL: "https://example.org",
 			CreatedAt:   actualResp.Result.CreatedAt,
 			UpdatedAt:   actualResp.Result.UpdatedAt,
 		},
@@ -111,9 +111,9 @@ func TestGet(t *testing.T) {
 }
 
 func TestUpdate(t *testing.T) {
-	r, _, ctx, app, mocks := app.InitTest(t, SqlDB)
+	r, _, ctx, app, mocks := application.InitTest(t, SqlDB)
 
-	mocks.DogClient.EXPECT().GetRandomDogUrl(gomock.Any()).Return("https://example.org", nil).Times(2)
+	mocks.DogClient.EXPECT().GetRandomDogURL(gomock.Any()).Return("https://example.org", nil).Times(2)
 
 	gin := server.NewRouter(app)
 
@@ -129,7 +129,7 @@ func TestUpdate(t *testing.T) {
 	})
 	r.NoError(err)
 
-	req, err := http.NewRequest(http.MethodPut, fmt.Sprintf("/user/%d", usr.Id), bytes.NewReader(body))
+	req, err := http.NewRequestWithContext(ctx, http.MethodPut, fmt.Sprintf("/user/%d", usr.ID), bytes.NewReader(body))
 	r.NoError(err)
 	req.Header.Set("Content-Type", "application/json")
 	w := httptest.NewRecorder()
@@ -142,10 +142,10 @@ func TestUpdate(t *testing.T) {
 	r.Equal(http.StatusOK, w.Code)
 	r.Equal(response.Response[response.User]{
 		Result: response.User{
-			Id:          actualResp.Result.Id,
+			ID:          actualResp.Result.ID,
 			Username:    "updatedTestUser",
 			Email:       "updatedTestUser@example.com",
-			DogPhotoUrl: "https://example.org",
+			DogPhotoURL: "https://example.org",
 			CreatedAt:   actualResp.Result.CreatedAt,
 			UpdatedAt:   actualResp.Result.UpdatedAt,
 		},
@@ -153,9 +153,9 @@ func TestUpdate(t *testing.T) {
 }
 
 func TestDelete(t *testing.T) {
-	r, _, ctx, app, mocks := app.InitTest(t, SqlDB)
+	r, _, ctx, app, mocks := application.InitTest(t, SqlDB)
 
-	mocks.DogClient.EXPECT().GetRandomDogUrl(gomock.Any()).Return("https://example.org", nil).Times(1)
+	mocks.DogClient.EXPECT().GetRandomDogURL(gomock.Any()).Return("https://example.org", nil).Times(1)
 
 	gin := server.NewRouter(app)
 
@@ -165,7 +165,7 @@ func TestDelete(t *testing.T) {
 	})
 	r.NoError(err)
 
-	req, err := http.NewRequest(http.MethodDelete, fmt.Sprintf("/user/%d", usr.Id), nil)
+	req, err := http.NewRequestWithContext(ctx, http.MethodDelete, fmt.Sprintf("/user/%d", usr.ID), nil)
 	r.NoError(err)
 	w := httptest.NewRecorder()
 
@@ -179,9 +179,9 @@ func TestDelete(t *testing.T) {
 }
 
 func TestGetFiltered(t *testing.T) {
-	r, _, ctx, app, mocks := app.InitTest(t, SqlDB)
+	r, _, ctx, app, mocks := application.InitTest(t, SqlDB)
 
-	mocks.DogClient.EXPECT().GetRandomDogUrl(gomock.Any()).Return("https://example.org", nil).Times(5)
+	mocks.DogClient.EXPECT().GetRandomDogURL(gomock.Any()).Return("https://example.org", nil).Times(5)
 
 	gin := server.NewRouter(app)
 
@@ -204,11 +204,11 @@ func TestGetFiltered(t *testing.T) {
 	r.NoError(err)
 
 	body, err := json.Marshal(request.GetFilteredUsers{
-		IdsIn: []int{usr1.Id, usr2.Id},
+		IdsIn: []int{usr1.ID, usr2.ID},
 	})
 	r.NoError(err)
 
-	req, err := http.NewRequest(http.MethodPost, "/search-users", bytes.NewReader(body))
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, "/search-users", bytes.NewReader(body))
 	r.NoError(err)
 	req.Header.Set("Content-Type", "application/json")
 	w := httptest.NewRecorder()

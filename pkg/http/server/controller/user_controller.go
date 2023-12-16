@@ -1,11 +1,12 @@
 package controller
 
 import (
+	"net/http"
+
 	"github.com/PopescuStefanRadu/ent-demo/pkg/http/server/request"
 	"github.com/PopescuStefanRadu/ent-demo/pkg/http/server/response"
 	"github.com/PopescuStefanRadu/ent-demo/pkg/user"
 	"github.com/gin-gonic/gin"
-	"net/http"
 )
 
 type User struct {
@@ -14,7 +15,7 @@ type User struct {
 
 func (ctl *User) Get(c *gin.Context) {
 	q := struct {
-		Id int `uri:"id" binding:"required" json:"id"`
+		ID int `binding:"required" uri:"id"`
 	}{}
 
 	if err := c.ShouldBindUri(&q); err != nil {
@@ -22,7 +23,7 @@ func (ctl *User) Get(c *gin.Context) {
 		return
 	}
 
-	res, err := ctl.UserService.GetUserById(c, q.Id)
+	res, err := ctl.UserService.GetUserByID(c, q.ID)
 	if err != nil {
 		_ = c.Error(err)
 		return
@@ -40,6 +41,7 @@ func (ctl *User) Create(c *gin.Context) {
 	}
 
 	u := user.CreateUserParams(q)
+
 	created, err := ctl.UserService.CreateUser(c, &u)
 	if err != nil {
 		_ = c.Error(err)
@@ -50,8 +52,10 @@ func (ctl *User) Create(c *gin.Context) {
 }
 
 func (ctl *User) Update(c *gin.Context) {
-	var q request.UpdateUserURI
-	var b request.UpdateUserBody
+	var (
+		q request.UpdateUserURI
+		b request.UpdateUserBody
+	)
 
 	if err := c.ShouldBindUri(&q); err != nil {
 		_ = c.Error(err)
@@ -64,10 +68,11 @@ func (ctl *User) Update(c *gin.Context) {
 	}
 
 	u := user.UpdateUserParams{
-		Id:       q.Id,
+		ID:       q.ID,
 		Username: b.Username,
 		Email:    b.Email,
 	}
+
 	updated, err := ctl.UserService.UpdateUser(c, &u)
 	if err != nil {
 		_ = c.Error(err)
@@ -79,7 +84,7 @@ func (ctl *User) Update(c *gin.Context) {
 
 func (ctl *User) Delete(c *gin.Context) {
 	q := struct {
-		Id int `uri:"id" binding:"required"`
+		ID int `binding:"required" uri:"id"`
 	}{}
 
 	if err := c.ShouldBindUri(&q); err != nil {
@@ -87,7 +92,7 @@ func (ctl *User) Delete(c *gin.Context) {
 		return
 	}
 
-	if err := ctl.UserService.DeleteUserById(c, q.Id); err != nil {
+	if err := ctl.UserService.DeleteUserByID(c, q.ID); err != nil {
 		_ = c.Error(err)
 		return
 	}
@@ -104,6 +109,7 @@ func (ctl *User) GetFiltered(c *gin.Context) {
 	}
 
 	f := user.FindAllFilter(q)
+
 	filtered, err := ctl.UserService.FindAllUsersByFilter(c, &f)
 	if err != nil {
 		_ = c.Error(err)

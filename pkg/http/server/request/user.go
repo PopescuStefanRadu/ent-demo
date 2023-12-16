@@ -6,7 +6,7 @@ type CreateUser struct {
 }
 
 type UpdateUserURI struct {
-	Id int `json:"id" uri:"id" binding:"required"`
+	ID int `binding:"required" uri:"id"`
 }
 
 type UpdateUserBody struct {

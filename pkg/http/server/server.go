@@ -3,12 +3,15 @@ package server
 import (
 	"context"
 	"errors"
+	"net/http"
+	"time"
+
 	"github.com/PopescuStefanRadu/ent-demo/pkg/app"
 	"github.com/gin-gonic/gin"
 	"github.com/rs/zerolog"
-	"net/http"
-	"time"
 )
+
+const readHeaderTimout = 15 * time.Second
 
 type Config struct {
 	ShutdownTimeout time.Duration
@@ -32,8 +35,9 @@ func NewHTTPServer(config Config, logger zerolog.Logger) (*HTTPServer, error) {
 
 	router := NewRouter(app)
 	srv := &http.Server{
-		Addr:    config.Address,
-		Handler: router,
+		Addr:              config.Address,
+		Handler:           router,
+		ReadHeaderTimeout: readHeaderTimout,
 	}
 
 	return &HTTPServer{
@@ -53,6 +57,7 @@ func (h *HTTPServer) Start(ctx context.Context) error {
 
 	serverErr := make(chan error)
 	defer close(serverErr)
+
 	go func() {
 		if err := h.Server.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
 			serverErr <- err
@@ -65,7 +70,8 @@ func (h *HTTPServer) Start(ctx context.Context) error {
 	case <-ctx.Done():
 		timeout, cancel := context.WithTimeout(context.Background(), h.ShutdownTimeout)
 		defer cancel()
-		return h.Shutdown(timeout)
+
+		return h.Shutdown(timeout) //nolint:contextcheck // intended, otherwise it would not wait to shut down
 	}
 }
 

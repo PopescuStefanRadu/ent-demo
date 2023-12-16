@@ -3,21 +3,22 @@ package app
 import (
 	"context"
 	"database/sql"
-	entsql "entgo.io/ent/dialect/sql"
 	"fmt"
+	"testing"
+
+	entsql "entgo.io/ent/dialect/sql"
 	"github.com/PopescuStefanRadu/ent-demo/pkg/ent"
 	"github.com/PopescuStefanRadu/ent-demo/pkg/entwrap"
 	"github.com/PopescuStefanRadu/ent-demo/pkg/external/dog"
 	"github.com/PopescuStefanRadu/ent-demo/pkg/user"
-	mock_user "github.com/PopescuStefanRadu/ent-demo/pkg/user/mock"
-	_ "github.com/mattn/go-sqlite3"
+	mockUser "github.com/PopescuStefanRadu/ent-demo/pkg/user/mock"
+	_ "github.com/mattn/go-sqlite3" // importing drivers because it's easier to have a shared initialization for the application based on the config
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
-	"testing"
 )
 
-var DBDriverName = "sqlite3"
+const DBDriverName = "sqlite3"
 
 type Config struct {
 	DBUrl            string
@@ -32,7 +33,7 @@ type App struct {
 }
 
 type Mocks struct {
-	DogClient *mock_user.MockDog
+	DogClient *mockUser.MockDog
 }
 
 type Migrator interface {
@@ -69,31 +70,37 @@ func NewAppFromConfig(l zerolog.Logger, cfg *Config) (*App, error) {
 
 func (a App) Init(ctx context.Context) error {
 	a.Logger.Info().Msg("Migrating")
+
 	err := a.Migrator.Migrate(ctx)
 	if err == nil {
 		a.Logger.Info().Msg("Migration complete")
 	}
+
 	return err
 }
 
 func (a App) Cleanup(ctx context.Context) error {
 	a.Logger.Info().Msg("Cleaning up application state")
+
 	_, err := a.UserRepository.DeleteAll(ctx)
 	if err != nil {
 		return err
 	}
+
 	a.Logger.Info().Msg("Finished cleaning up application state")
+
 	return nil
 }
 
 func InitTest(t *testing.T, db *sql.DB) (*require.Assertions, zerolog.Logger, context.Context, *App, Mocks) {
+	t.Helper()
 	r := require.New(t)
 	l := zerolog.New(zerolog.NewTestWriter(t))
 	ctx := l.WithContext(context.Background())
 
 	ctl := gomock.NewController(t)
 
-	mockDog := mock_user.NewMockDog(ctl)
+	mockDog := mockUser.NewMockDog(ctl)
 	mocks := Mocks{DogClient: mockDog}
 
 	app := initApp(ctx, t, l, db, mocks)
@@ -102,6 +109,8 @@ func InitTest(t *testing.T, db *sql.DB) (*require.Assertions, zerolog.Logger, co
 }
 
 func initApp(ctx context.Context, t *testing.T, l zerolog.Logger, db *sql.DB, mocks Mocks) *App {
+	t.Helper()
+
 	drv := entsql.OpenDB("sqlite3", db)
 	EntClient := ent.NewClient(ent.Driver(drv), ent.Log(func(a ...any) {
 		l.Info().Msgf("ent: %s", fmt.Sprint(a))
