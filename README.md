@@ -19,6 +19,7 @@ Application: `pkg/app/app.go`
 
 ### TODO
  
+ - transactions
  - add more documentation
    - design decisions
    - public functionality when required
